@@ -45,4 +45,46 @@ interface CursorInterface
      * @return int
      */
     public function getCount();
+	
+    /**
+     * Returns the current URL.
+     *
+     * @return int
+     */
+	public function getUrl();
+	
+    /**
+     * Returns the prev URL.
+     *
+     * @return int
+     */
+	public function getPrevUrl($url);
+	
+    /**
+     * Returns the next URL.
+     *
+     * @return int
+     */
+	public function getNextUrl($url);
+	
+    /**
+     * Returns the limit.
+     *
+     * @return int
+     */
+	public function getLimit($url);
+	
+    /**
+     * Returns the minId.
+     *
+     * @return int
+     */
+	public function getMinId();
+	
+    /**
+     * Returns the maxId.
+     *
+     * @return int
+     */
+	public function getMaxId();
 }

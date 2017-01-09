@@ -92,7 +92,7 @@ class Manager
 
         return $scopeInstance;
     }
-
+	
     /**
      * Get Include Params.
      *
@@ -147,59 +147,90 @@ class Manager
      * @param array|string $includes Array or csv string of resources to include
      *
      * @return $this
-     */
+	 */
+
     public function parseIncludes($includes)
     {
         // Wipe these before we go again
         $this->requestedIncludes = $this->includeParams = [];
 
         if (is_string($includes)) {
-            $includes = explode(',', $includes);
+            $requestedIncludes = explode(',', $includes);
         }
 
-        if (! is_array($includes)) {
+        if (!is_array($requestedIncludes)) {
             throw new \InvalidArgumentException(
                 'The parseIncludes() method expects a string or an array. '.gettype($includes).' given'
             );
         }
 
-        foreach ($includes as $include) {
-            list($includeName, $allModifiersStr) = array_pad(explode(':', $include, 2), 2, null);
+        foreach ($requestedIncludes as $requestedInclude) {	
+			
+			$nestedInclude = null;
+			
+			$includes = explode('.', $requestedInclude); 
+					
+			foreach ($includes as $include) {
+				
+				list($includeName, $allModifiersStr) = array_pad(explode(':', $include, 2), 2, null);
+				
+				$includeNameParam = $includeName;
+				
+				if (count($includes) < 2) {
+						
+					// Trim it down to a cool level of recursion
+					$includeName = $this->trimToAcceptableRecursionLevel($includeName);
+		
+					if (in_array($includeName, $this->requestedIncludes)) {
+						continue;
+					}
+					
+					$this->requestedIncludes[] = $includeName;
+					
+				} else {
+					$nestedInclude .= $includeName.'.';
+				}
+				
+				// No Params? Bored
+				if ($allModifiersStr === null) {
+					continue;
+				}
 
-            // Trim it down to a cool level of recursion
-            $includeName = $this->trimToAcceptableRecursionLevel($includeName);
+				// Matches multiple instances of 'something(foo|bar|baz)' in the string
+				// I guess it ignores : so you could use anything, but probably don't do that
+				preg_match_all('/([\w]+)(\(([^\)]+)\))?/', $allModifiersStr, $allModifiersArr);
 
-            if (in_array($includeName, $this->requestedIncludes)) {
-                continue;
-            }
-            $this->requestedIncludes[] = $includeName;
+				// [0] is full matched strings...
+				$modifierCount = count($allModifiersArr[0]);
 
-            // No Params? Bored
-            if ($allModifiersStr === null) {
-                continue;
-            }
+				$modifierArr = [];
 
-            // Matches multiple instances of 'something(foo|bar|baz)' in the string
-            // I guess it ignores : so you could use anything, but probably don't do that
-            preg_match_all('/([\w]+)(\(([^\)]+)\))?/', $allModifiersStr, $allModifiersArr);
+				for ($modifierIt = 0; $modifierIt < $modifierCount; $modifierIt++) {
+					// [1] is the modifier
+					$modifierName = $allModifiersArr[1][$modifierIt];
 
-            // [0] is full matched strings...
-            $modifierCount = count($allModifiersArr[0]);
+					// and [3] is delimited params
+					$modifierParamStr = $allModifiersArr[3][$modifierIt];
 
-            $modifierArr = [];
+					// Make modifier array key with an array of params as the value
+					$modifierArr[$modifierName] = explode($this->paramDelimiter, $modifierParamStr);
+				}
+				
+				$this->includeParams[$includeNameParam] = $modifierArr;
+			}
+			if (count($includes) > 1) {
 
-            for ($modifierIt = 0; $modifierIt < $modifierCount; $modifierIt++) {
-                // [1] is the modifier
-                $modifierName = $allModifiersArr[1][$modifierIt];
-
-                // and [3] is delimited params
-                $modifierParamStr = $allModifiersArr[3][$modifierIt];
-
-                // Make modifier array key with an array of params as the value
-                $modifierArr[$modifierName] = explode($this->paramDelimiter, $modifierParamStr);
-            }
-
-            $this->includeParams[$includeName] = $modifierArr;
+				$nestedInclude = rtrim($nestedInclude, '.');
+				
+				// Trim it down to a cool level of recursion
+				$nestedInclude = $this->trimToAcceptableRecursionLevel($nestedInclude);
+	
+				if (in_array($nestedInclude, $this->requestedIncludes)) {
+					continue;
+				}
+				
+				$this->requestedIncludes[] = $nestedInclude;
+			}
         }
 
         // This should be optional and public someday, but without it includes would never show up
@@ -223,7 +254,7 @@ class Manager
             $excludes = explode(',', $excludes);
         }
 
-        if (! is_array($excludes)) {
+        if (!is_array($excludes)) {
             throw new \InvalidArgumentException(
                 'The parseExcludes() method expects a string or an array. '.gettype($excludes).' given'
             );

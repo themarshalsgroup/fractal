@@ -151,7 +151,7 @@ class Scope
      * @return bool Returns the new number of elements in the array.
      */
     public function isRequested($checkScopeSegment)
-    {
+    {		
         if ($this->parentScopes) {
             $scopeArray = array_slice($this->parentScopes, 1);
             array_push($scopeArray, $this->scopeIdentifier, $checkScopeSegment);
@@ -273,14 +273,6 @@ class Scope
         // Pull out all of OUR metadata and any custom meta data to merge with the main level data
         $meta = $serializer->meta($this->resource->getMeta());
 
-        // in case of returning NullResource we should return null and not to go with array_merge
-        if (is_null($data)) {
-            if (!empty($meta)) {
-                return $meta;
-            }
-            return null;
-        }
-
         return array_merge($data, $meta);
     }
 
@@ -297,7 +289,7 @@ class Scope
     /**
      * Execute the resources transformer and return the data and included data.
      *
-     * @internal
+     * @internal`
      *
      * @return array
      */
@@ -409,14 +401,14 @@ class Scope
      */
     protected function transformerHasIncludes($transformer)
     {
-        if (! $transformer instanceof TransformerAbstract) {
-            return false;
+        if (!$transformer instanceof TransformerAbstract) {
+		    return false;
         }
 
         $defaultIncludes = $transformer->getDefaultIncludes();
         $availableIncludes = $transformer->getAvailableIncludes();
 
-        return ! empty($defaultIncludes) || ! empty($availableIncludes);
+        return !empty($defaultIncludes) || !empty($availableIncludes);
     }
 
     /**

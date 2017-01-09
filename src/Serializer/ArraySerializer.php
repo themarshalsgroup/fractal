@@ -42,7 +42,7 @@ class ArraySerializer extends SerializerAbstract
     {
         return $data;
     }
-
+	
     /**
      * Serialize null resource.
      *
@@ -123,14 +123,44 @@ class ArraySerializer extends SerializerAbstract
      * @return array
      */
     public function cursor(CursorInterface $cursor)
-    {
-        $cursor = [
-            'current' => $cursor->getCurrent(),
-            'prev' => $cursor->getPrev(),
-            'next' => $cursor->getNext(),
-            'count' => (int) $cursor->getCount(),
-        ];
+    {		
+		$minId = $cursor->getMinId();
+		$maxId = $cursor->getMaxId();
+		
+		$current = $cursor->getCurrent();
+		$prev = $cursor->getPrev();
+		$next = $cursor->getNext();
+		$count = $cursor->getCount();
+		
+		$url = $cursor->getUrl();
+		$prevUrl = $cursor->getPrevUrl($url);
+		$nextUrl = $cursor->getNextUrl($url);
 
+        $cursor = [
+            'current' => $current,
+            'prev' => $prev,
+            'next' => $next,
+            'count' => (int) $count,
+        ];
+		
+		$cursor['links'] = [];
+
+		if ($maxId && $current !== $maxId) {
+			$cursor['links']['prev'] = $prevUrl;
+		} else {
+			unset($cursor['prev']);
+		}
+				
+		if ($minId && $next !== $minId) {
+			$cursor['links']['next'] = $nextUrl;
+		} else {
+			unset($cursor['next']);
+		}
+		
+		if (empty($cursor['links']['prev']) && empty($cursor['links']['next'])) {
+			unset($cursor['links']);
+		}
+		
         return ['cursor' => $cursor];
     }
 }
