@@ -197,6 +197,9 @@ class EmberJsonApiSerializer extends ArraySerializer
 
                 $includeObjects = $this->createIncludeObjects($includeObject);
 				
+				list($serializedData, $linkedIds) = $this->serializeIncludedObjectsWithCacheKey($includeObjects, $linkedIds, $serializedData);
+				
+				/*
                 foreach ($includeObjects as $object) {
 					if (!in_array($key, $requestedIncludes)) {
 						continue; // might need work here parents = categories argh not in type
@@ -210,6 +213,7 @@ class EmberJsonApiSerializer extends ArraySerializer
                         $linkedIds[$cacheKey] = $object;
                     }
                 }
+				*/
             }
         }
         return empty($serializedData) ? [] : ['included' => $serializedData];
@@ -409,6 +413,9 @@ class EmberJsonApiSerializer extends ArraySerializer
         foreach ($data as $value) {
             foreach ($value as $includeObject) {
                 if (isset($includeObject['included'])) {
+					list($includedData, $linkedIds) = $this->serializeIncludedObjectsWithCacheKey($includeObject['included'], $linkedIds, $includedData);
+					
+					/*
                     foreach ($includeObject['included'] as $object) {
 						$includeType = $object['type'];
                         $includeId = $object['id'];
@@ -419,6 +426,7 @@ class EmberJsonApiSerializer extends ArraySerializer
                             $linkedIds[$cacheKey] = $object;
                         }
                     }
+					*/
                 }
             }
         }
@@ -598,5 +606,55 @@ class EmberJsonApiSerializer extends ArraySerializer
         }
 
         return $relationship;
+    }
+	
+    /**
+     * @param $includeObjects
+     * @param $linkedIds
+     * @param $serializedData
+     *
+     * @return array
+     */
+    private function serializeIncludedObjectsWithCacheKey($includeObjects, $linkedIds, $serializedData)
+    {
+        foreach ($includeObjects as $object) {			
+            $includeType = $object['type'];
+            $includeId = $object['id'];
+            $cacheKey = "$includeType:$includeId";
+            if (!array_key_exists($cacheKey, $linkedIds)) {
+                $serializedData[] = $object;
+                $linkedIds[$cacheKey] = $object;
+            }
+        }
+		
+		/*
+		foreach ($includeObject['included'] as $object) {
+			$includeType = $object['type'];
+			$includeId = $object['id'];
+			$cacheKey = "$includeType:$includeId";
+
+			if (!array_key_exists($cacheKey, $linkedIds)) {
+				$includedData[] = $object;
+				$linkedIds[$cacheKey] = $object;
+			}
+		}
+		*/
+		
+		/*
+		foreach ($includeObjects as $object) {
+
+
+			$includeType = $object['type'];
+			$includeId = $object['id'];
+			$cacheKey = "$includeType:$includeId";
+			
+			if (!array_key_exists($cacheKey, $linkedIds)) {
+				$serializedData[] = $object;
+				$linkedIds[$cacheKey] = $object;
+			}
+		}
+		*/
+		
+        return [$serializedData, $linkedIds];
     }
 }
