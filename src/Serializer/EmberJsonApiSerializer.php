@@ -197,9 +197,8 @@ class EmberJsonApiSerializer extends ArraySerializer
 
                 $includeObjects = $this->createIncludeObjects($includeObject);
 				
-				list($serializedData, $linkedIds) = $this->serializeIncludedObjectsWithCacheKey($includeObjects, $linkedIds, $serializedData);
+				//list($serializedData, $linkedIds) = $this->serializeIncludedObjectsWithCacheKey($includeObjects, $linkedIds, $serializedData);
 				
-				/*
                 foreach ($includeObjects as $object) {
 					if (!in_array($key, $requestedIncludes)) {
 						continue; // might need work here parents = categories argh not in type
@@ -213,7 +212,6 @@ class EmberJsonApiSerializer extends ArraySerializer
                         $linkedIds[$cacheKey] = $object;
                     }
                 }
-				*/
             }
         }
         return empty($serializedData) ? [] : ['included' => $serializedData];
@@ -413,9 +411,9 @@ class EmberJsonApiSerializer extends ArraySerializer
         foreach ($data as $value) {
             foreach ($value as $includeObject) {
                 if (isset($includeObject['included'])) {
-					list($includedData, $linkedIds) = $this->serializeIncludedObjectsWithCacheKey($includeObject['included'], $linkedIds, $includedData);
 					
-					/*
+					//list($includedData, $linkedIds) = $this->serializeIncludedObjectsWithCacheKey($includeObject['included'], $linkedIds, $includedData);
+					
                     foreach ($includeObject['included'] as $object) {
 						$includeType = $object['type'];
                         $includeId = $object['id'];
@@ -426,7 +424,6 @@ class EmberJsonApiSerializer extends ArraySerializer
                             $linkedIds[$cacheKey] = $object;
                         }
                     }
-					*/
                 }
             }
         }
